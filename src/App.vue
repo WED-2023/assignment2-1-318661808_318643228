@@ -1,34 +1,35 @@
 <template>
   <div id="app">
-    <div id="nav">
-      <router-link :to="{ name: 'main' }">Vue Recipes</router-link>|
-      <router-link :to="{ name: 'search' }">Search</router-link>|
-      {{ !$root.store.username }}
-      <span v-if="!$root.store.username">
-        Guest:
-        <router-link :to="{ name: 'register' }">Register</router-link>|
-        <router-link :to="{ name: 'login' }">Login</router-link>|
-      </span>
-      <span v-else>
-        {{ $root.store.username }}: <button @click="Logout">Logout</button>|
-      </span>
-    </div>
+    <MainNavBar />
+      <br>
     <router-view />
   </div>
 </template>
 
 <script>
+import MainNavBar from './components/MainNavBar.vue';
 export default {
   name: "App",
+  components: {
+    MainNavBar
+  },
   methods: {
+    
     Logout() {
+  // Send a request to the server to log out
+  this.axios.post(`${this.$root.store.server_domain}/auth/logout`)
+    .then(() => {
+      // Clear user data in the client
       this.$root.store.logout();
-      this.$root.toast("Logout", "User logged out successfully", "success");
 
+
+      // Redirect to the home page
       this.$router.push("/").catch(() => {
         this.$forceUpdate();
       });
-    }
+    })
+
+}
   }
 };
 </script>
@@ -40,8 +41,15 @@ export default {
   font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-  min-height: 100vh;
+  color: #ebe4dc;
+  // min-height: 100vh;
+  background-image: url('~@/assets/background.jpg');
+  background-size: cover; /* Ensures the image covers the entire viewport */
+  background-position: center; /* Centers the background image */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  background-attachment: fixed; /* Keeps the background fixed while scrolling */
+  min-height: 100vh; /* Ensures the app covers the entire viewport height */
+
 }
 
 #nav {
@@ -50,10 +58,10 @@ export default {
 
 #nav a {
   font-weight: bold;
-  color: #2c3e50;
+  color: #dccfc3;
 }
 
 #nav a.router-link-exact-active {
-  color: #42b983;
+  color: #d45955;
 }
 </style>

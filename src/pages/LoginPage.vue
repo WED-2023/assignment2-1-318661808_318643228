@@ -1,140 +1,82 @@
 <template>
-  <div class="container">
-    <h1 class="title">Login</h1>
-    <b-form @submit.prevent="onLogin">
-      <b-form-group
-        id="input-group-Username"
-        label-cols-sm="3"
-        label="Username:"
-        label-for="Username"
-      >
-        <b-form-input
-          id="Username"
-          v-model="$v.form.username.$model"
-          type="text"
-          :state="validateState('username')"
-        ></b-form-input>
-        <b-form-invalid-feedback>
-          Username is required
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-form-group
-        id="input-group-Password"
-        label-cols-sm="3"
-        label="Password:"
-        label-for="Password"
-      >
-        <b-form-input
-          id="Password"
-          type="password"
-          v-model="$v.form.password.$model"
-          :state="validateState('password')"
-        ></b-form-input>
-        <b-form-invalid-feedback>
-          Password is required
-        </b-form-invalid-feedback>
-      </b-form-group>
-
-      <b-button
-        type="submit"
-        variant="primary"
-        style="width:100px;display:block;"
-        class="mx-auto w-100"
-        >Login</b-button
-      >
-      <div class="mt-2">
-        Do not have an account yet?
-        <router-link to="register"> Register in here</router-link>
-      </div>
-    </b-form>
-    <b-alert
-      class="mt-2"
-      v-if="form.submitError"
-      variant="warning"
-      dismissible
-      show
-    >
-      Login failed: {{ form.submitError }}
-    </b-alert>
-    <!-- <b-card class="mt-3" header="Form Data Result">
-      <pre class="m-0">{{ form }}</pre>
-    </b-card> -->
+  <div class="login-container">
+    <Login />
   </div>
 </template>
 
 <script>
-import { required } from "vuelidate/lib/validators";
-import {mockLogin} from "../services/auth.js"
+import Login from "@/components/Login.vue"; // Adjust the path to the correct Login component
+
 export default {
-  name: "Login",
-  data() {
-    return {
-      form: {
-        username: "",
-        password: "",
-        submitError: undefined
-      }
-    };
+  name: "LoginPage",
+  components: {
+    Login,
   },
-  validations: {
-    form: {
-      username: {
-        required
-      },
-      password: {
-        required
-      }
-    }
-  },
-  methods: {
-    validateState(param) {
-      const { $dirty, $error } = this.$v.form[param];
-      return $dirty ? !$error : null;
-    },
-    async Login() {
-      try {
-        
-        // const response = await this.axios.post(
-        //   this.$root.store.server_domain +"/Login",
-
-
-        //   {
-        //     username: this.form.username,
-        //     password: this.form.password
-        //   }
-        // );
-
-        const success = true; // modify this to test the error handling
-        const response = mockLogin(this.form.username, this.form.password, success);
-
-        // console.log(response);
-        // this.$root.loggedIn = true;
-        console.log(this.$root.store.login);
-        this.$root.store.login(this.form.username);
-        this.$router.push("/");
-      } catch (err) {
-        console.log(err.response);
-        this.form.submitError = err.response.data.message;
-      }
-    },
-
-    onLogin() {
-      // console.log("login method called");
-      this.form.submitError = undefined;
-      this.$v.form.$touch();
-      if (this.$v.form.$anyError) {
-        return;
-      }
-      // console.log("login method go");
-
-      this.Login();
-    }
-  }
 };
 </script>
-<style lang="scss" scoped>
-.container {
-  max-width: 400px;
+
+<style scoped>
+/* Full screen for background */
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: 'Arial', sans-serif;
+}
+
+.login-container {
+  background: url('@/assets/background.jpg') no-repeat center center fixed;
+  background-size: cover;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#b-card {
+  background: rgba(255, 255, 255, 0.95); /* Slight transparency */
+  padding: 60px; /* More padding */
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); /* Stronger shadow */
+  max-width: 700px; /* Set larger card width */
+  max-height: 700px;
+  height: 100%;
+  width: 100%;
+  font-size: 1.3rem;
+}
+
+/* Buttons */
+.b-button {
+  background: linear-gradient(45deg, #57a6b0, #92bb62); /* Gradient color */
+  border: none;
+  color: white;
+  padding: 15px;
+  font-weight: bold;
+  font-size: 1.2rem;
+  width: 100%;
+}
+
+.b-button:hover {
+  background-color: #4f979e; /* Hover color */
+}
+
+/* Inputs */
+.b-form-group label {
+  font-size: 1.2rem;
+}
+
+.b-form-input {
+  font-size: 1.1rem;
+  padding: 10px;
+}
+
+/* Register link */
+.mt-2 a {
+  font-size: 1.1rem;
+  color: #57a6b0;
+  font-weight: bold;
 }
 </style>

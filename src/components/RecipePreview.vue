@@ -1,141 +1,239 @@
 <template>
-  <router-link
-    :to="{ name: 'recipe', params: { recipeId: recipe.id } }"
-    class="recipe-preview"
-  >
+  <div class="recipe-preview">
     <div class="recipe-body">
-      <img v-if="image_load" :src="recipe.image" class="recipe-image" />
+      <router-link :to="generateRecipeLink()" @click.native="logRecipeId">
+  <img :src="recipe.image" class="recipe-image" alt="Recipe Image" />
+</router-link>
+
     </div>
     <div class="recipe-footer">
       <div :title="recipe.title" class="recipe-title">
         {{ recipe.title }}
       </div>
       <ul class="recipe-overview">
-        <li>{{ recipe.readyInMinutes }} minutes</li>
-        <li>{{ recipe.aggregateLikes }} likes</li>
+        <li>
+          <img src="../assets/PreviewIcons/time_24px.png" alt="ReadyTime" />
+          <br />
+          {{ recipe.readyInMinutes }} minutes
+        </li>
+        <li>
+          <img src="../assets/PreviewIcons/quality_like_24px.png" alt="Likes" />
+          <br />
+          {{ recipe.aggregateLikes }} likes
+        </li>
+        <li v-if="recipe.vegetarian">
+          <img src="../assets/PreviewIcons/vegetarian_24.png" alt="Vegetarian" />
+        </li>
+        <li v-if="recipe.vegan">
+          <img src="../assets/PreviewIcons/vegan_24.png" alt="Vegan" />
+        </li>
+        <li v-if="recipe.glutenFree">
+          <img src="../assets/PreviewIcons/gluten_24.png" alt="GlutenFree" />
+        </li>
+        
+
+        <li v-if="$root.store.username"> <!-- Show favorite button only if user is logged in -->
+          <img
+            :src="favoriteIcon"
+            :alt="isFavorite ? 'Favorite_full' : 'Favorite_empty'"
+            @click.stop="toggleFavorite"
+            class="favorite-icon"
+          />
+        </li>
+        <li v-else>
+          <img
+            :src="favoriteIcon"
+            :alt="'Favorite_empty'"
+            class="favorite-icon disabled" 
+          />
+        </li>
+        <!-- Apply disabled class for unauthenticated users -->
+        <!-- <li>
+          <img
+            :src="favoriteIcon"
+            :alt="isFavorite ? 'Favorite_full' : 'Favorite_empty'"
+            @click.stop="toggleFavorite"
+            class="favorite-icon"
+          />
+        </li> -->
       </ul>
     </div>
-  </router-link>
+
+
+     <!-- Alert for users when they add/remove a recipe from favorites -->
+     <b-alert
+      class="mt-2"
+      v-if="alertMessage"
+      variant="info"
+      dismissible
+      fade
+      show
+    >
+      {{ alertMessage }}
+    </b-alert>
+
+
+  </div>
 </template>
 
 <script>
 export default {
-  mounted() {
-    this.axios.get(this.recipe.image).then((i) => {
-      this.image_load = true;
-    });
-  },
-  data() {
-    return {
-      image_load: false
-    };
-  },
   props: {
     recipe: {
       type: Object,
       required: true
-    }
+    },
+    source: {
+      type: String,
+      required: true // "personal" or "spoonacular"
+    },
+  },
+  data() {
+    return {
+      isFavorite: false
+    };
+  },
+  mounted() {
+    this.checkIfFavorite();
+  },
+  methods: {
+    generateRecipeLink() {
+      if (this.source === "personal") {
+        return { name: "personalRecipe", params: { recipeId: this.recipe.id } };
+      } else {
+        return { name: "recipe", params: { recipeId: this.recipe.id } };
+      }
+    },
 
-    // id: {
-    //   type: Number,
-    //   required: true
-    // },
-    // title: {
-    //   type: String,
-    //   required: true
-    // },
-    // readyInMinutes: {
-    //   type: Number,
-    //   required: true
-    // },
-    // image: {
-    //   type: String,
-    //   required: true
-    // },
-    // aggregateLikes: {
-    //   type: Number,
-    //   required: false,
-    //   default() {
-    //     return undefined;
-    //   }
-    // }
+    logRecipeId() {
+    console.log("Navigating to recipe with ID:", this.recipe.id);
+  },
+    async checkIfFavorite() {
+      try {
+        // Fetch the user's favorite recipes from the backend
+        const endpoint = `${this.$root.store.server_domain}/users/favorites`;
+        const response = await this.axios.get(endpoint, {
+          withCredentials: true, // Ensure that cookies are sent with the request
+        });
+        const favoriteRecipes = response.data.map(recipe => recipe.id);
+
+        // Check if the current recipe is in the user's favorites
+        this.isFavorite = favoriteRecipes.includes(this.recipe.id);
+      } catch (error) {
+        console.error('Failed to check favorite status:', error);
+      }
+    },
+    async toggleFavorite() {
+      try {
+        let message = '';
+        const endpoint = `${this.$root.store.server_domain}/users/favorites`;  // Define endpoint here
+        if (this.isFavorite) {
+          // // Remove from favorites
+          await this.axios.delete(endpoint, { 
+            data: { recipeId: this.recipe.id },
+            withCredentials: true 
+          });
+          message = 'Recipe removed from favorites.';
+
+        } else {
+          // Add to favorites
+          await this.axios.post(endpoint, { recipeId: this.recipe.id }, { withCredentials: true });          
+          message = 'Recipe added to favorites.';
+        }
+
+        // Toggle the favorite state and show a success message
+        this.isFavorite = !this.isFavorite;
+        alert(message);
+      } catch (error) {
+        console.error('Failed to toggle favorite status:', error);
+        alert('An error occurred while updating favorites.');
+      }
+    }
+  },
+  computed: {
+    favoriteIcon() {
+      return this.isFavorite
+      ? require('../assets/PreviewIcons/favorite_full.png')
+      : require('../assets/PreviewIcons/favorite_empty.png');
+    }
   }
 };
 </script>
-
 <style scoped>
 .recipe-preview {
   display: inline-block;
-  width: 90%;
+  width: 80%;
+  height: 300px; /* Set a fixed height for all cards */
+  position: relative;
+  margin: 10px 0;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease-in-out;
+  border: 1px solid #ccc; /* Add border */
+  border-radius: 8px; /* Optional: Rounded corners */
+  box-sizing: border-box;
+  background-color: #fff; /* Set background color */
+}
+
+.recipe-preview:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.recipe-body {
+  width: 100%;
+  height: 60%; /* Adjust as needed */
+  position: relative;
+}
+
+.recipe-image {
+  width: 100%;
   height: 100%;
-  position: relative;
-  margin: 10px 10px;
-}
-.recipe-preview > .recipe-body {
-  width: 100%;
-  height: 200px;
-  position: relative;
+  object-fit: cover;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
 }
 
-.recipe-preview .recipe-body .recipe-image {
-  margin-left: auto;
-  margin-right: auto;
-  margin-top: auto;
-  margin-bottom: auto;
-  display: block;
-  width: 98%;
-  height: auto;
-  -webkit-background-size: cover;
-  -moz-background-size: cover;
-  background-size: cover;
-}
-
-.recipe-preview .recipe-footer {
+.recipe-footer {
   width: 100%;
-  height: 50%;
-  overflow: hidden;
-}
-
-.recipe-preview .recipe-footer .recipe-title {
-  padding: 10px 10px;
-  width: 100%;
-  font-size: 12pt;
-  text-align: left;
-  white-space: nowrap;
-  overflow: hidden;
-  -o-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-}
-
-.recipe-preview .recipe-footer ul.recipe-overview {
-  padding: 5px 10px;
-  width: 100%;
-  display: -webkit-box;
-  display: -moz-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
+  height: 40%; /* Adjust as needed */
+  padding: 10px;
+  background-color: #f8f9fa;
   display: flex;
-  -webkit-box-flex: 1;
-  -moz-box-flex: 1;
-  -o-box-flex: 1;
-  box-flex: 1;
-  -webkit-flex: 1 auto;
-  -ms-flex: 1 auto;
-  flex: 1 auto;
-  table-layout: fixed;
-  margin-bottom: 0px;
+  flex-direction: column;
+  justify-content: space-between; /* Ensure content is spaced evenly */
 }
 
-.recipe-preview .recipe-footer ul.recipe-overview li {
-  -webkit-box-flex: 1;
-  -moz-box-flex: 1;
-  -o-box-flex: 1;
-  -ms-box-flex: 1;
-  box-flex: 1;
-  -webkit-flex-grow: 1;
-  flex-grow: 1;
-  width: 90px;
-  display: table-cell;
+.recipe-title {
+  font-size: 1.2em;
+  font-weight: bold;
   text-align: center;
+  margin-bottom: 10px;
+  color: #333;
+  flex-grow: 1; /* Ensures it takes the necessary space */
+}
+
+.recipe-overview {
+  display: flex;
+  justify-content: space-around;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.recipe-overview li {
+  text-align: center;
+}
+
+.favorite-icon {
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+}
+
+.favorite-icon.disabled {
+  opacity: 0.5; /* Make it semi-transparent */
+  pointer-events: none; /* Prevent click events */
+  cursor: not-allowed; /* Show "not allowed" cursor */
 }
 </style>

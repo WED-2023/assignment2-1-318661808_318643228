@@ -24,7 +24,41 @@
           Username alpha
         </b-form-invalid-feedback>
       </b-form-group>
-
+      <b-form-group
+          id="input-group-firstName"
+          label-cols-sm="3"
+          label="First Name:"
+          label-for="firstName"
+        >
+          <b-form-input
+            id="firstName"
+            v-model="$v.form.firstName.$model"
+            type="text"
+            :state="validateState('firstName')"
+          ></b-form-input>
+          <b-form-invalid-feedback v-if="!$v.form.firstName.required">
+            First name is required
+          </b-form-invalid-feedback>
+        </b-form-group>
+  
+        <b-form-group
+          id="input-group-lastName"
+          label-cols-sm="3"
+          label="Last Name:"
+          label-for="lastName"
+        >
+          <b-form-input
+            id="lastName"
+            v-model="$v.form.lastName.$model"
+            type="text"
+            :state="validateState('lastName')"
+          ></b-form-input>
+          <b-form-invalid-feedback v-if="!$v.form.lastName.required">
+            Last name is required
+          </b-form-invalid-feedback>
+        </b-form-group> 
+      
+      
       <b-form-group
         id="input-group-country"
         label-cols-sm="3"
@@ -64,7 +98,7 @@
         <b-form-invalid-feedback
           v-if="$v.form.password.required && !$v.form.password.length"
         >
-          Have length between 5-10 characters long
+        Password must be between 5-10 characters long
         </b-form-invalid-feedback>
       </b-form-group>
 
@@ -90,6 +124,26 @@
         </b-form-invalid-feedback>
       </b-form-group>
 
+      <b-form-group
+          id="input-group-email"
+          label-cols-sm="3"
+          label="Email:"
+          label-for="email"
+        >
+          <b-form-input
+            id="email"
+            type="email"
+            v-model="$v.form.email.$model"
+            :state="validateState('email')"
+          ></b-form-input>
+          <b-form-invalid-feedback v-if="!$v.form.email.required">
+            Email is required
+          </b-form-invalid-feedback>
+          <b-form-invalid-feedback v-else-if="!$v.form.email.email">
+            Email must be valid
+          </b-form-invalid-feedback>
+        </b-form-group>
+
       <b-button type="reset" variant="danger">Reset</b-button>
       <b-button
         type="submit"
@@ -103,6 +157,17 @@
         <router-link to="login"> Log in here</router-link>
       </div>
     </b-form>
+
+    <!-- Success Alert -->
+    <b-alert
+      v-if="form.submitSuccess"
+      variant="success"
+      show
+      class="text-center success-alert"
+    >
+      {{ form.submitSuccess }}
+    </b-alert>
+
     <b-alert
       class="mt-2"
       v-if="form.submitError"
@@ -112,24 +177,14 @@
     >
       Register failed: {{ form.submitError }}
     </b-alert>
-    <!-- <b-card class="mt-3 md-3" header="Form Data Result">
-      <pre class="m-0"><strong>form:</strong> {{ form }}</pre>
-      <pre class="m-0"><strong>$v.form:</strong> {{ $v.form }}</pre>
-    </b-card> -->
+ 
   </div>
 </template>
 
 <script>
 import countries from "../assets/countries";
-import {
-  required,
-  minLength,
-  maxLength,
-  alpha,
-  sameAs,
-  email
-} from "vuelidate/lib/validators";
-import { mockRegister } from "../services/auth.js";
+import { required, minLength, maxLength, alpha, sameAs, email } from "vuelidate/lib/validators";
+
 export default {
   name: "Register",
   data() {
@@ -156,17 +211,24 @@ export default {
         length: (u) => minLength(3)(u) && maxLength(8)(u),
         alpha
       },
+      firstName: { required },
+      lastName: { required },
       country: {
         required
       },
       password: {
         required,
-        length: (p) => minLength(5)(p) && maxLength(10)(p)
+        length: (p) => minLength(5)(p) && maxLength(10)(p),
+        hasNumberAndSpecialChar: (value) => /\d/.test(value) && /[!@#$%^&*]/.test(value)
       },
       confirmedPassword: {
         required,
         sameAsPassword: sameAs("password")
-      }
+      },
+      email: {
+          required,
+          email
+        }
     }
   },
   mounted() {
@@ -182,28 +244,34 @@ export default {
     async Register() {
       try {
 
-        // const response = await this.axios.post(
-        //   // "https://test-for-3-2.herokuapp.com/user/Register",
-        //   this.$root.store.server_domain + "/Register",
+      // Send a POST request to the server for registration
+      const response = await this.axios.post(
+          `${this.$root.store.server_domain}/auth/register`,
+          {
+            username: this.form.username,
+            first_name: this.form.firstName,
+            last_name: this.form.lastName,
+            country: this.form.country,
+            password: this.form.password,
+            email: this.form.email
+          }
+        );
 
-        //   {
-        //     username: this.form.username,
-        //     password: this.form.password
-        //   }
-        // );
+      // Show a success message
+      this.$bvToast.toast('Registration successful! Redirecting to login page...', {
+        title: 'Success',
+        variant: 'success',
+        solid: true,
+        autoHideDelay: 3000
+      });
 
-        const userDetails = {
-          username: this.form.username,
-          password: this.form.password
-        };
-
-        const response = mockRegister(userDetails);
-
+      // Redirect to login page after showing the message
+      setTimeout(() => {
         this.$router.push("/login");
-        // console.log(response);
+      }, 2000);
       } catch (err) {
         console.log(err.response);
-        this.form.submitError = err.response.data.message;
+        this.form.submitError = err.response?.data?.message || "Registration failed. Please try again.";
       }
     },
 
@@ -236,5 +304,16 @@ export default {
 <style lang="scss" scoped>
 .container {
   max-width: 500px;
+}
+
+.success-alert {
+  position: top-center;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1050; /* Ensures the alert is on top */
+  width: 100%;
+  padding: 1.5rem;
+  font-size: 1.25rem;
 }
 </style>

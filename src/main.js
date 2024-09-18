@@ -1,18 +1,28 @@
 import Vue from "vue";
 import App from "./App.vue";
+import routes from "./routes";
 import VueAxios from "vue-axios";
 import axios from "axios";
-
-import routes from "./routes";
 import VueRouter from "vue-router";
-Vue.use(VueRouter);
+import Vuelidate from "vuelidate";
+import { BootstrapVue, IconsPlugin } from 'bootstrap-vue';
+import 'bootstrap/dist/css/bootstrap.css';
+import 'bootstrap-vue/dist/bootstrap-vue.css';
+import VueCookies from 'vue-cookies';
+import { Carousel3d } from 'vue-carousel-3d';
+
+import { PopoverPlugin } from 'bootstrap-vue';
+
+Vue.use(PopoverPlugin);
+
+// Initialize the router
 const router = new VueRouter({
+  mode: 'history', // Use history mode to remove the hash from URLs
+
   routes,
 });
 
-import Vuelidate from "vuelidate";
-import "bootstrap/dist/css/bootstrap.css";
-import "bootstrap-vue/dist/bootstrap-vue.css";
+// Import and use the necessary BootstrapVue plugins
 import {
   FormGroupPlugin,
   FormPlugin,
@@ -24,7 +34,21 @@ import {
   AlertPlugin,
   ToastPlugin,
   LayoutPlugin,
+  JumbotronPlugin,
+  CarouselPlugin,
+  VBHoverPlugin,
 } from "bootstrap-vue";
+
+Vue.use(VueRouter);
+Vue.use(BootstrapVue);
+Vue.use(IconsPlugin);
+Vue.use(Vuelidate);
+Vue.use(VueCookies);
+Vue.use(VueAxios, axios);
+Vue.use(Carousel3d);
+
+
+
 [
   FormGroupPlugin,
   FormPlugin,
@@ -36,8 +60,13 @@ import {
   AlertPlugin,
   ToastPlugin,
   LayoutPlugin,
+  JumbotronPlugin,
+  CarouselPlugin,
+  VBHoverPlugin,
 ].forEach((x) => Vue.use(x));
-Vue.use(Vuelidate);
+
+
+Vue.config.productionTip = false;
 
 axios.interceptors.request.use(
   function(config) {
@@ -57,14 +86,18 @@ axios.interceptors.response.use(
     return response;
   },
   function(error) {
-    // Do something with response error
+    if (error.response.status === 402) {
+      Vue.prototype.$bvToast.toast("You have exceeded the daily API request limit. Please try again tomorrow.", {
+        title: "API Limit Exceeded",
+        variant: "warning",
+        solid: true,
+        autoHideDelay: 5000,
+      });
+    }
     return Promise.reject(error);
   }
 );
 
-Vue.use(VueAxios, axios);
-
-Vue.config.productionTip = false;
 
 const shared_data = {
   server_domain: "http://localhost:3000",
