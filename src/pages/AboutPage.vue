@@ -2,8 +2,7 @@
     <div class="container">
       <h1 align="center" class="title">About me!</h1>
       <p class="about-paragraph">
-        <!-- Hi, we are Ido and Matan. We're both third-year Software and Information Systems Engineering students at Ben-Gurion University. Alongside our studies, we proudly served in the Iron Swords War, each completing over 150 days of reserve duty as fighters. Balancing our academic and military commitments has been challenging but incredibly rewarding. We're dedicated to excelling in our field while honoring our duty to our country. -->
-        Hi, my name is ido Ido. I'm third-year Software and Information Systems Engineering student at Ben-Gurion University. Alongside my studies, I proudly served in the Iron Swords War, completing over 150 days of reserve duty as fighter. Balancing my academic and military commitments has been challenging but incredibly rewarding. I'm dedicated to excelling in my field while honoring my duty to our country. 
+        Hi, we are Ido and Matan. We're both third-year Software and Information Systems Engineering students at Ben-Gurion University. Alongside our studies, we proudly served in the Iron Swords War, each completing over 150 days of reserve duty as fighters. Balancing our academic and military commitments has been challenging but incredibly rewarding. We're dedicated to excelling in our field while honoring our duty to our country.
 
       </p>
       
@@ -23,7 +22,7 @@
           </b-card>
         </b-col>
   
-        <!-- <b-col>
+        <b-col>
           <b-card id="info-about-us" bg-variant="light" class="text-center">
             <h3 class="dark-title">Matan Vaknin</h3>    
             <br />
@@ -34,7 +33,7 @@
               <img src="../assets/git.png" alt="GitHub" class="social-image" />
             </a>
           </b-card>
-        </b-col> -->
+        </b-col>
       </b-row>
     </div>
   </template>
