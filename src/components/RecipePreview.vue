@@ -32,7 +32,7 @@
         </li>
         
 
-        <li v-if="$root.store.username"> <!-- Show favorite button only if user is logged in -->
+        <li v-if="$root.store.username && source !== 'personal'"> <!-- Show favorite button only if user is logged in -->
           <img
             :src="favoriteIcon"
             :alt="isFavorite ? 'Favorite_full' : 'Favorite_empty'"
